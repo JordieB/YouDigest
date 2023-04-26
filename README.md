@@ -1,6 +1,6 @@
 # YouTube Transcription and Summarization
 
-This repository contains a Python script and Streamlit web app that allows users to download YouTube videos, transcribe their audio using OpenAI's Whisper ASR model, and optionally summarize the transcription using the text-davinci-002 model.
+This repository contains a Python script and Streamlit web app that allows users to download YouTube videos, transcribe their audio using OpenAI's Whisper ASR model, and optionally summarize the transcription using the text-davinci-003 model.
 
 ## Requirements
 
@@ -37,7 +37,7 @@ streamlit run app.py
 2. Enter a YouTube video URL, and the app will display the transcription and provide an option to summarize it.
 
 ### As a standalone Python script
-1. Edit the app.py file and uncomment the lines at the bottom of the script (remove the # before if __name__ == "__main__": and the following two lines).
+1. Edit the app.py file and only allow `main_cli()` run in the final lines.
 2. Run the script
 ```bash
 python app.py
