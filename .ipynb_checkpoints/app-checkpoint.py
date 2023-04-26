@@ -11,7 +11,7 @@ from pytube import YouTube
 # Set your OpenAI API key
 openai.api_key = os.environ['OPENAI_API_KEY']
 
-
+@st.cache_data(show_spinner=False)
 def download_youtube_video(url: str) -> str:
     """
     Download a YouTube video in MP4 format.
@@ -20,7 +20,13 @@ def download_youtube_video(url: str) -> str:
     :return: The local file path of the downloaded video.
     """
     yt = YouTube(url)
-    stream = yt.streams.filter(file_extension='mp4').get_lowest_resolution()
+    # Pull down the stream obj, and if it fails due to no StreamData, try again in 60s
+    try:
+        stream = yt.streams.filter(file_extension='mp4', progressive=True).get_lowest_resolution()
+    except KeyError:
+        time.sleep(60)
+        stream = yt.streams.filter(file_extension='mp4', progressive=True).get_lowest_resolution()
+        
     
     # If no stream found with the given resolution, use the first available stream
     if stream is None:
@@ -36,7 +42,7 @@ def download_youtube_video(url: str) -> str:
     
     return output_path
 
-
+@st.cache_data(show_spinner=False)
 def transcribe_video(video_path: str) -> str:
     """
     Transcribe a video using OpenAI's whisper-1 model.
@@ -80,14 +86,16 @@ def main():
     youtube_url = st.text_input("Enter the YouTube video URL:")
 
     if youtube_url:
-        video_path = download_youtube_video(youtube_url)
+        # Show progress for downloading the video
+        with st.spinner("Downloading the video..."):
+            video_path = download_youtube_video(youtube_url)
 
-        st.write("Transcribing the video...")
-        transcription = transcribe_video(video_path)
+        # Show progress for transcribing the video
+        with st.spinner("Transcribing the video..."):
+            transcription = transcribe_video(video_path)
 
         st.write("Transcription:")
-        # Used code blocks to avoid unexpected markdown interactions
-        st.code(transcription)
+        st.text(transcription)
 
         summarize = st.checkbox("Do you want to summarize the transcription?")
 
