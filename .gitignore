@@ -1,0 +1,24 @@
+# .gitignore
+
+# Ignore data files
+*.mp4
+*.wav
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore Python virtual environments
+venv/
+__pycache__/
+
+# Ignore Streamlit cache
+.cache/
+
+# Ignore PyCharm project files
+.idea/
+
+# Ignore VS Code project files
+.vscode/
+
+# Ignore txt/edit version of README.md
+README.txt
