@@ -22,6 +22,10 @@ def download_youtube_video(url: str) -> str:
     yt = YouTube(url)
     stream = yt.streams.filter(file_extension='mp4').get_lowest_resolution()
     
+    # If no stream found with the given resolution, use the first available stream
+    if stream is None:
+        stream = yt.streams.filter(file_extension='mp4').first() 
+    
     # Sanitize the video title by replacing non-alphanumeric characters, spaces, or hyphens with underscores
     sanitized_title = re.sub(r"[^\w\-]", "_", yt.title)
     # Limit the sanitized title length to avoid issues with long file names and lowercase
