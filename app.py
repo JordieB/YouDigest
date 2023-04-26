@@ -90,11 +90,12 @@ def main():
         if summarize:
             summary_length = st.slider("Enter the desired summary length (in words):", 10, 500, 100)
 
-            st.write("Summarizing the transcription...")
-            summary = summarize_text(transcription, length=summary_length * 4)
+            if st.button("Summarize"):
+                st.write("Summarizing the transcription...")
+                summary = summarize_text(transcription, length=summary_length * 4)
 
-            st.write("Summary:")
-            st.write(summary)
+                st.write("Summary:")
+                st.write(summary)
 
 def main_cli():
     """
