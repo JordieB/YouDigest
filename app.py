@@ -56,7 +56,7 @@ def transcribe_video(video_path: str) -> str:
 
     return transcript.text
 
-
+@st.cache_data(show_spinner=False)
 def summarize_text(text: str, length: int = 100) -> str:
     """
     Summarize a given text using OpenAI's text-davinci-003 model.
@@ -81,33 +81,42 @@ def summarize_text(text: str, length: int = 100) -> str:
 
 
 def main():
-    st.title("YouTube Video Transcription and Summarization")
+    st.set_page_config(page_title="YouTube Transcription", page_icon=":memo:")
 
-    youtube_url = st.text_input("Enter the YouTube video URL:")
+    st.title("YouTube Video Transcription and Summarization")
+    st.markdown("---")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        youtube_url = st.text_input("Enter the YouTube video URL:")
+
+    with col2:
+        summarize = st.checkbox("Summarize the transcription?")
 
     if youtube_url:
-        # Show progress for downloading the video
         with st.spinner("Downloading the video..."):
             video_path = download_youtube_video(youtube_url)
 
-        # Show progress for transcribing the video
         with st.spinner("Transcribing the video..."):
             transcription = transcribe_video(video_path)
 
-        st.write("Transcription:")
+        st.markdown("---")
+
+        st.subheader("Transcription")
         st.text(transcription)
 
-        summarize = st.checkbox("Do you want to summarize the transcription?")
-
         if summarize:
+            st.markdown("---")
+
             summary_length = st.slider("Enter the desired summary length (in words):", 10, 500, 100)
 
             if st.button("Summarize"):
-                st.write("Summarizing the transcription...")
-                summary = summarize_text(transcription, length=summary_length * 4)
+                with st.spinner("Summarizing the transcription..."):
+                    summary = summarize_text(transcription, length=summary_length * 4)
 
-                st.write("Summary:")
-                st.write(summary)
+                st.subheader("Summary")
+                st.text(summary)
 
 def main_cli():
     """
