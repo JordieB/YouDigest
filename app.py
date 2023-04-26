@@ -1,4 +1,5 @@
 import os
+import re
 import time
 import tempfile
 from typing import Tuple
@@ -11,46 +12,37 @@ from pytube import YouTube
 openai.api_key = os.environ['OPENAI_API_KEY']
 
 
-def download_youtube_video(url: str, resolution: str = 'lowest') -> str:
+def download_youtube_video(url: str) -> str:
     """
     Download a YouTube video in MP4 format.
 
     :param url: The YouTube video URL.
-    :param resolution: The desired video resolution (default is 'lowest').
     :return: The local file path of the downloaded video.
     """
     yt = YouTube(url)
-    stream = yt.streams.filter(file_extension='mp4', res=resolution).first()
-    output_path = os.path.join(tempfile.gettempdir(), f"{yt.title}.mp4")
-    stream.download(output_path=output_path)
+    stream = yt.streams.filter(file_extension='mp4').get_lowest_resolution()
+    
+    # Sanitize the video title by replacing non-alphanumeric characters, spaces, or hyphens with underscores
+    sanitized_title = re.sub(r"[^\w\-]", "_", yt.title)
+    # Limit the sanitized title length to avoid issues with long file names and lowercase
+    sanitized_title = sanitized_title[:25].lower()
+    
+    # Download the video
+    output_path = stream.download(output_path=tempfile.gettempdir())
+    
     return output_path
 
 
 def transcribe_video(video_path: str) -> str:
     """
-    Transcribe a video using OpenAI's Whisper ASR model.
+    Transcribe a video using OpenAI's whisper-1 model.
 
     :param video_path: The local file path of the video.
     :return: The transcription text.
     """
-    # Upload the video file to OpenAI's servers
+    # Transcribe the video using the whisper-1 model
     with open(video_path, "rb") as f:
-        file = openai.File.create(file=f.read(), purpose="transcription")
-
-    # Start a transcription job using the Whisper ASR model
-    job = openai.Job.create(file_id=file.id, model="whisper-v1", priority="high")
-
-    # Poll the job status until it's complete
-    while True:
-        job = openai.Job.get(job.id)
-        if job.status == "succeeded":
-            break
-        elif job.status == "failed":
-            raise Exception("Transcription job failed")
-        time.sleep(1)
-
-    # Fetch the transcription results
-    transcript = job.get_results()
+        transcript = openai.Audio.transcribe("whisper-1", f)
 
     return transcript.text
 
@@ -90,7 +82,8 @@ def main():
         transcription = transcribe_video(video_path)
 
         st.write("Transcription:")
-        st.write(transcription)
+        # Used code blocks to avoid unexpected markdown interactions
+        st.code(transcription)
 
         summarize = st.checkbox("Do you want to summarize the transcription?")
 
@@ -103,6 +96,27 @@ def main():
             st.write("Summary:")
             st.write(summary)
 
+def main_cli():
+    """
+    The main function for the command-line interface (CLI) version of the application.
+    """
+    youtube_url = input("Enter the YouTube video URL: ")
+    video_path = download_youtube_video(youtube_url)
+    transcription = transcribe_video(video_path)
+
+    summarize = input("Do you want to summarize the transcription? (yes/no): ").lower()
+
+    if summarize == 'yes':
+        summary_length = int(input("Enter the desired summary length (in words): "))
+        summary = summarize_text(transcription, length=summary_length)
+        print("\nSummary:\n", summary)
+    else:
+        print("\nTranscription:\n", transcription)
+
 
 if __name__ == "__main__":
-    main()
+    try:
+        import streamlit
+        main()
+    except ImportError:
+        main_cli()
