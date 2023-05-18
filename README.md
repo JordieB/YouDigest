@@ -1,4 +1,5 @@
-# YouTube Transcription and Summarization
+# YouDigest
+*YouTube Transcription and Summarization*
 
 This repository contains a Python script and Streamlit web app that allows users to download YouTube videos, transcribe their audio using OpenAI's Whisper ASR model, and optionally summarize the transcription using the text-davinci-003 model.
 
